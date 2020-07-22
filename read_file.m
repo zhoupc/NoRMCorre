@@ -1,6 +1,6 @@
 function imData=read_file(path_to_file,sframe,num2read,options,im_info)
 
-% Reads uncompressed multipage .tiff, .hdf5, .avi or .raw files 
+% Reads uncompressed multipage .tiff, .hdf5, .avi or .raw files
 % Usage:  my_data=read_file('path_to_data_file, start frame, num to read);
 
 % INPUTS:
@@ -12,7 +12,7 @@ function imData=read_file(path_to_file,sframe,num2read,options,im_info)
 
 
 % OUTPUT:
-% imData:           data in array format 
+% imData:           data in array format
 
 % Written by Eftychios A. Pnevmatikakis, Simons Foundation
 
@@ -21,34 +21,38 @@ if nargin<3 || isempty(num2read); num2read = Inf; end
 
 [~,~,ext] = fileparts(path_to_file);
 
-if strcmpi(ext,'.tiff') || strcmpi(ext,'.tif') || strcmpi(ext,'.btf')  
-%     if ~exist('im_info','var')
-%         im_info = imfinfo(path_to_file);
-%     end
-%     TifLink = Tiff(path_to_file, 'r');
-%     num2read = min(num2read,length(im_info)-sframe+1);
-%     imData = zeros(im_info(1).Height,im_info(1).Width,num2read,'like',TifLink.read());
-%     for i=1:num2read
-%        TifLink.setDirectory(i+sframe-1);
-%        imData(:,:,i)=TifLink.read();
-%     end
-%     TifLink.close()
-    imData = bigread2(path_to_file,sframe,num2read);    
-
-    %imData = loadtiff(path_to_file,sframe,num2read);    
+if strcmpi(ext,'.tiff') || strcmpi(ext,'.tif') || strcmpi(ext,'.btf')
+    %     if ~exist('im_info','var')
+    %         im_info = imfinfo(path_to_file);
+    %     end
+    %     TifLink = Tiff(path_to_file, 'r');
+    %     num2read = min(num2read,length(im_info)-sframe+1);
+    %     imData = zeros(im_info(1).Height,im_info(1).Width,num2read,'like',TifLink.read());
+    %     for i=1:num2read
+    %        TifLink.setDirectory(i+sframe-1);
+    %        imData(:,:,i)=TifLink.read();
+    %     end
+    %     TifLink.close()
+    imData = bigread2(path_to_file,sframe,num2read);
+    
+    %imData = loadtiff(path_to_file,sframe,num2read);
 elseif strcmpi(ext,'.hdf5') || strcmpi(ext,'.h5')
-%     info = hdf5info(path_to_file);
-%     dims = info.GroupHierarchy.Datasets.Dims;
-%     name = info.GroupHierarchy.Datasets.Name;
+    %     info = hdf5info(path_to_file);
+    %     dims = info.GroupHierarchy.Datasets.Dims;
+    %     name = info.GroupHierarchy.Datasets.Name;
     info = h5info(path_to_file);
     dims = info.Datasets.Dataspace.Size;
-    name = info.Datasets.Name;    
+    name = info.Datasets.Name;
     if nargin < 3
         num2read = dims(end)-sframe+1;
     end
     num2read = min(num2read,dims(end)-sframe+1);
-%    imData = h5read(path_to_file,name,[ones(1,length(dims)-1),sframe],[dims(1:end-1),num2read]);
-    imData = h5read(path_to_file,['/',name],[ones(1,length(dims)-1),sframe],[dims(1:end-1),num2read]);
+    %    imData = h5read(path_to_file,name,[ones(1,length(dims)-1),sframe],[dims(1:end-1),num2read]);
+    if num2read<1
+        imData = reshape([], [dims(1:2), 0]);
+    else
+        imData = h5read(path_to_file,['/',name],[ones(1,length(dims)-1),sframe],[dims(1:end-1),num2read]);
+    end
 elseif strcmpi(ext,'.avi')
     v = VideoReader(path_to_file);
     if v.Duration*v.FrameRate < sframe
@@ -84,7 +88,7 @@ elseif strcmpi(ext,'.raw')
     end
     if nargin < 4 || ~isfield(options,'bitsize') || isempty(options.bitsize);
         options.bitsize = 2;
-    end   
+    end
     imData = read_raw_file(path_to_file,sframe,num2read,[options.d1,options.d2],options.bitsize);
 else
     error('Unknown file extension. Only .tiff, .avi and .hdf5 files are currently supported');

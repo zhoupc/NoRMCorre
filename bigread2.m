@@ -220,7 +220,7 @@ if strcmpi(ext,'.tiff') || strcmpi(ext,'.tif') || strcmpi(ext,'.BTF');
             
             if sframe>num_tot_frames
                 sframe=num_tot_frames;
-                num2read=1;
+                num2read=0;
                 display('starting frame has to be less than number of total frames...');
             end
             if (num2read+sframe<= num_tot_frames+1)
